@@ -126,7 +126,7 @@ function create() {
     this.anims.create({
         key: 'coin',
         frames: this.anims.generateFrameNumbers('coin', { start: 0, end: 8 }),
-        frameRate: 5, repeat: -1
+        frameRate: 6, repeat: -1
     })
 
     // redBullets = this.add.group()
@@ -150,19 +150,19 @@ function create() {
     // bullets.setAll('outOfBoundsKill', true)
     // bullets.setAll('checkWorldBounds', true)
 
-    enemy = this.physics.add.sprite(1500, Math.floor(Math.random() * (game.config.height - 50)) + 50, 'redBullet')
+    //enemy = this.physics.add.sprite(1500, Math.floor(Math.random() * (game.config.height - 50)) + 50, 'redBullet')
     //enemy.setOrigin()
-    enemy.setVelocityX(-300)
+    //enemy.setVelocityX(-300)
     //enemy.setVelocityY(-200)
-    enemy.anims.play('redBullet', true)
+    //enemy.anims.play('redBullet', true)
     //enemy.body.bounce.set(1)
-    enemy.setBodySize(40, 40, false).setOffset(0, 13)
+    //enemy.setBodySize(40, 40, false).setOffset(0, 13)
 
     scoreCoin = this.add.sprite(30, 35, 'coin').setScale(1.5)
     scoreCoin.anims.play('coin', true)
 
     coins = this.physics.add.group();
-
+    bullets = this.physics.add.group();
 
     //https://www.w3schools.com/js/js_random.asp
     // coin2 = this.physics.add.sprite(1200, Math.floor(Math.random() * (game.config.height - 50)) + 50, 'coin').setScale(1.5)
@@ -176,21 +176,36 @@ function create() {
 
     //Kolizja z krawędziami świata
     player.body.setCollideWorldBounds(true)
-    enemy.body.setCollideWorldBounds(true)
+    //enemy.body.setCollideWorldBounds(true)
 
     //Inne ciała nie mogą go przesuwać
     player.body.immovable = true
 
-    //this.time.events.loop(1000, addCoin, this)
+
+    this.time.addEvent({ delay: 4000, callback: addCoin, callbackScope: this, loop: true });
+
+    this.time.addEvent({ delay: 2000, callback: addBullet, callbackScope: this, loop: true });
 }
 
 function addCoin() {
-    coin = coins.create(1200, Math.floor(Math.random() * (game.config.height - 50) + 50), 'coin');
-    coin.setVelocityX(-400)
+    if (!death) {
+        coin = coins.create(1200, Math.floor(Math.random() * (game.config.height - 100) + 50), 'coin');
+        coin.setVelocityX(-250)
+        //bullet.setVelocityY(-300)
+        coin.anims.play('coin', true)
+        //coin.body.bounce.set(1)
+        //coin.body.setCollideWorldBounds(true)
+    }
+}
+
+function addBullet() {
+    bullet = bullets.create(1200, Math.floor(Math.random() * (game.config.height - 50) + 50), 'redBullet');
+    bullet.setBodySize(40, 40, false).setOffset(0, 13)
+    bullet.setVelocityX(-450)
     //bullet.setVelocityY(-300)
-    coin.anims.play('coin', true)
-    //coin.body.bounce.set(1)
-    //coin.body.setCollideWorldBounds(true)
+    bullet.anims.play('redBullet', true)
+    bullet.body.bounce.set(1)
+    bullet.body.setCollideWorldBounds(true)
 }
 
 death = false
@@ -214,7 +229,8 @@ function update() {
         }
 
         //console.log(coin)
-        //if (coin.active == true) coin.setVelocityX(0)
+        if (coins.active == true) coins.setVelocityX(0)
+        //if (bullets.active == true) bullets.setVelocityX(0)
     }
     else {
         //Animacja lasu
@@ -228,24 +244,25 @@ function update() {
         if (player.body.touching.down || player.body.onFloor()) player.anims.play('runningPlayer', true)
         else player.anims.play('flyingPlayer', true)
 
-        if (player.y > enemy.y) enemy.y += 0.5
-        else enemy.y -= 0.5
+        bullets.children.iterate((bullet) => {
+            if (player.y > bullet.y) bullet.y += 0.5
+            else bullet.y -= 0.5
+        })
     }
-    //console.log(enemy.body.x)
 
     //Wywołanie funkcji przy kolizji
-    this.physics.collide(player, enemy, collision)
-    this.physics.collide(player, coin, collectCoin)
+    this.physics.collide(player, bullets, collision)
+    this.physics.collide(player, coins, collectCoin)
 }
 
-function collision(player, enemy) {
+function collision(player, bullets) {
     //enemy.disableBody(true,true)
-    enemy.destroy()
+    bullets.destroy()
     death = true
     player.body.gravity.y = 90000
 }
 
-function collectCoin(player, coin) {
-    coin.destroy()
+function collectCoin(player, coins) {
+    coins.destroy()
     score.text = (parseInt(score.text) + 1).toString()
 }
