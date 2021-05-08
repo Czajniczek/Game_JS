@@ -199,13 +199,39 @@ function addCoin() {
 }
 
 function addBullet() {
-    bullet = bullets.create(1200, Math.floor(Math.random() * (game.config.height - 50) + 50), 'redBullet');
-    bullet.setBodySize(40, 40, false).setOffset(0, 13)
-    bullet.setVelocityX(-450)
-    //bullet.setVelocityY(-300)
-    bullet.anims.play('redBullet', true)
-    bullet.body.bounce.set(1)
-    bullet.body.setCollideWorldBounds(true)
+    //type = 'blueBullet';
+    choice = Math.floor(Math.random() * 3) + 1;
+    if (choice == 1) {
+        //type = 'redBullet';
+        bullet = bullets.create(1200, Math.floor(Math.random() * (game.config.height - 50) + 50), 'redBullet');
+        bullet.setBodySize(40, 40, false).setOffset(0, 13)
+        bullet.setVelocityX(-450)
+        bullet.anims.play('redBullet', true)
+        bullet.body.bounce.set(1)
+        bullet.body.setCollideWorldBounds(true)
+    } else if (choice == 2) {
+        //type = 'blueBullet';
+        bullet = bullets.create(1200, Math.floor(Math.random() * (game.config.height - 50) + 50), 'blueBullet');
+        bullet.setBodySize(40, 40, false).setOffset(0, 13)
+        bullet.setVelocityX(-500)
+        bullet.anims.play('blueBullet', true)
+        //bullet.body.bounce.set(1)
+        //bullet.body.setCollideWorldBounds(true)
+    } else if (choice == 3) {
+        //type = 'pinkBullet';
+        bullet = bullets.create(1200, Math.floor(Math.random() * (game.config.height - 50) + 50), 'pinkBullet');
+        bullet.setBodySize(40, 40, false).setOffset(0, 13)
+        bullet.setVelocityX(-400)
+        direction = Math.floor(Math.random() * 2) + 1;
+        if (direction == 1) {
+            bullet.setVelocityY(250)
+        } else if (direction == 2) {
+            bullet.setVelocityY(-250)
+        }
+        bullet.anims.play('pinkBullet', true)
+        bullet.body.bounce.set(1)
+        bullet.body.setCollideWorldBounds(true)
+    }
 }
 
 death = false
@@ -245,8 +271,11 @@ function update() {
         else player.anims.play('flyingPlayer', true)
 
         bullets.children.iterate((bullet) => {
-            if (player.y > bullet.y) bullet.y += 0.5
-            else bullet.y -= 0.5
+            if (bullet.texture.key == "redBullet") {
+                if (player.y > bullet.y) bullet.y += 0.6
+                else bullet.y -= 0.6
+                //console.log(bullet)
+            }
         })
     }
 
