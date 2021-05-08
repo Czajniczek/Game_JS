@@ -11,7 +11,7 @@ let game = new Phaser.Game({
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     }
 })
@@ -60,7 +60,6 @@ function create() {
     background = this.add.tileSprite(0, 0, game.config.width, game.config.height, 'background').setOrigin(0)
     score = this.add.bitmapText(50, 10, 'Desyrel', '0', 35)
 
-    //console.log(game)
     //this.scene.pause()
     layers = []
     for (let i = 0; i < 10; i++) {
@@ -132,8 +131,6 @@ function create() {
     //Kolizja z krawędziami świata
     player.body.setCollideWorldBounds(true)
 
-    //left = this.physics.world.bounds.left;
-
     //Inne ciała nie mogą go przesuwać
     player.body.immovable = true
 }
@@ -149,36 +146,39 @@ function addCoin() {
 function addBullet() {
     choice = Math.floor(Math.random() * 4) + 1;
 
-    if (choice == 1) {
+    switch (choice) {
         //type = 'redBullet';
-        bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'redBullet');
-        bullet.setBodySize(40, 40, false).setOffset(0, 13)
-        bullet.setVelocityX(-450)
-        bullet.anims.play('redBullet', true)
-        bullet.body.bounce.set(1)
-        bullet.body.setCollideWorldBounds(true)
-    } else if (choice == 2) {
-        //type = 'blueBullet';
-        bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'blueBullet');
-        bullet.setBodySize(40, 40, false).setOffset(0, 13)
-        bullet.setVelocityX(-550)
-        bullet.anims.play('blueBullet', true)
-        //bullet.body.bounce.set(1)
-        //bullet.body.setCollideWorldBounds(true)
-    } else if (choice == 3) {
+        case 1:
+            bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'redBullet');
+            bullet.setBodySize(40, 40, false).setOffset(0, 13)
+            bullet.setVelocityX(-450)
+            bullet.anims.play('redBullet', true)
+            // bullet.body.bounce.set(1)
+            // bullet.body.setCollideWorldBounds(true)
+            break;
+
         //type = 'pinkBullet';
-        bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'pinkBullet');
-        bullet.setBodySize(40, 40, false).setOffset(0, 13)
-        bullet.setVelocityX(-500)
-        direction = Math.floor(Math.random() * 2) + 1;
-        if (direction == 1) {
-            bullet.setVelocityY(250)
-        } else if (direction == 2) {
-            bullet.setVelocityY(-250)
-        }
-        bullet.anims.play('pinkBullet', true)
-        bullet.body.bounce.set(1)
-        bullet.body.setCollideWorldBounds(true)
+        case 2:
+            bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'pinkBullet');
+            bullet.setBodySize(40, 40, false).setOffset(0, 13)
+            bullet.setVelocityX(-500)
+
+            direction = Math.floor(Math.random() * 2) + 1;
+            if (direction == 1) bullet.setVelocityY(250)
+            else bullet.setVelocityY(-250)
+
+            bullet.anims.play('pinkBullet', true)
+            bullet.body.bounce.set(1)
+            bullet.body.setCollideWorldBounds(true)
+            break;
+
+        //type = 'blueBullet';
+        case 3:
+            bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'blueBullet');
+            bullet.setBodySize(40, 40, false).setOffset(0, 13)
+            bullet.setVelocityX(-550)
+            bullet.anims.play('blueBullet', true)
+            break;
     }
 }
 
@@ -187,11 +187,6 @@ deathAnimationPlayed = false
 
 //Metoda uruchamiana co klatkę
 function update() {
-    //player.setVelocityY(0)
-
-    // let playerSpeed = 500
-    let speed = 5
-
     if (death) {
         if (!deathAnimationPlayed) {
             player.anims.play('deathPlayer', true)
@@ -202,28 +197,23 @@ function update() {
             layers[i].tilePositionX += 0
         }
 
-        //console.log(coin)
         if (coins.active == true) coins.setVelocityX(0)
         //if (bullets.active == true) bullets.setVelocityX(0)
     }
     else {
         //Animacja lasu
         for (let i = 0; i < 10; i++) {
-            layers[i].tilePositionX += speed * i * 0.12
+            layers[i].tilePositionX += i * 5 * 0.12
         }
 
         if (jump.isDown) player.setVelocityY(-200)
-        //console.log(player.body.gravity.y)
-        //console.log(player.body.velocity.y) //Jak opada to prędkość + else -
         if (player.body.touching.down || player.body.onFloor()) player.anims.play('runningPlayer', true)
         else player.anims.play('flyingPlayer', true)
 
         coins.children.iterate((coin) => {
             if (coin != undefined) {
                 if (coin.x <= -50) coins.remove(coin, true, true)
-                //console.log(coin.x)
             }
-            //console.log(coins)
         })
     }
 
@@ -232,8 +222,6 @@ function update() {
             if (bullet.texture.key == "redBullet") {
                 if (player.y > bullet.y) bullet.y += 0.6
                 else bullet.y -= 0.6
-                //console.log(bullet.x)
-                //console.log(bullets)
             }
 
             if (bullet.x < -150) bullets.remove(bullet, true, true)
@@ -243,11 +231,9 @@ function update() {
     //Wywołanie funkcji przy kolizji
     this.physics.collide(player, bullets, collision)
     this.physics.collide(player, coins, collectCoin)
-    //this.physics.collide(left, bullets, collision2)
 }
 
 function collision(player, bullets) {
-    //enemy.disableBody(true,true)
     bullets.destroy()
     death = true
     player.body.gravity.y = 90000
@@ -257,8 +243,3 @@ function collectCoin(player, coins) {
     coins.destroy()
     score.text = (parseInt(score.text) + 1).toString()
 }
-
-// function collision2(left, bullets) {
-//     bullets.destroy()
-//     console.log("XD")
-// }
