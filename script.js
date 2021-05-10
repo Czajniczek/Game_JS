@@ -11,7 +11,7 @@ let game = new Phaser.Game({
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     }
 })
@@ -50,13 +50,14 @@ function preload() {
         frameWidth: 128, frameHeight: 49.5
     })
 
-    this.load.spritesheet('coin', '/img/Coin.png', {
+    this.load.spritesheet('coin', 'img/Coin.png', {
         frameWidth: 32, frameHeight: 32
     })
 }
 
 //Tworzenie obiektów gry
 function create() {
+    //https://photonstorm.github.io/phaser3-docs/Phaser.GameObjects.Components.Origin.html
     background = this.add.tileSprite(0, 0, game.config.width, game.config.height, 'background').setOrigin(0)
     score = this.add.bitmapText(50, 10, 'Desyrel', '0', 35)
 
@@ -105,7 +106,7 @@ function create() {
     this.anims.create({
         key: 'coin',
         frames: this.anims.generateFrameNumbers('coin', { start: 0, end: 8 }),
-        frameRate: 6, repeat: -1
+        frameRate: 5, repeat: -1
     })
 
     jump = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
@@ -121,7 +122,7 @@ function create() {
     bullets = this.physics.add.group()
 
     this.time.addEvent({ delay: 3000, callback: addCoin, callbackScope: this, loop: true });
-    this.time.addEvent({ delay: 2000, callback: addBullet, callbackScope: this, loop: true });
+    this.time.addEvent({ delay: 1500, callback: addBullet, callbackScope: this, loop: true });
 
     //this.cameras.main.setBounds(0, 0, game.config.width, game.config.height) //Kamera porusza się tylko w obrębie świata
     this.physics.world.setBounds(0, 0, game.config.width, game.config.height - 45) //Świat gry jest większy/mniejszy niż ekran
@@ -144,6 +145,8 @@ function addCoin() {
 }
 
 function addBullet() {
+    //https://developer.mozilla.org/pl/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+    //https://www.w3schools.com/js/js_random.asp
     choice = Math.floor(Math.random() * 4) + 1;
 
     switch (choice) {
@@ -153,8 +156,6 @@ function addBullet() {
             bullet.setBodySize(40, 40, false).setOffset(0, 13)
             bullet.setVelocityX(-450)
             bullet.anims.play('redBullet', true)
-            // bullet.body.bounce.set(1)
-            // bullet.body.setCollideWorldBounds(true)
             break;
 
         //type = 'pinkBullet';
@@ -162,8 +163,8 @@ function addBullet() {
             bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'pinkBullet');
             bullet.setBodySize(40, 40, false).setOffset(0, 13)
             bullet.setVelocityX(-500)
-
             direction = Math.floor(Math.random() * 2) + 1;
+
             if (direction == 1) bullet.setVelocityY(250)
             else bullet.setVelocityY(-250)
 
@@ -229,17 +230,17 @@ function update() {
     })
 
     //Wywołanie funkcji przy kolizji
-    this.physics.collide(player, bullets, collision)
+    this.physics.collide(player, bullets, playerDeath)
     this.physics.collide(player, coins, collectCoin)
 }
 
-function collision(player, bullets) {
-    bullets.destroy()
+function playerDeath(player, bullets) {
     death = true
     player.body.gravity.y = 90000
+    bullets.destroy()
 }
 
 function collectCoin(player, coins) {
-    coins.destroy()
     score.text = (parseInt(score.text) + 1).toString()
+    coins.destroy()
 }
