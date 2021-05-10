@@ -152,9 +152,9 @@ function create() {
     bullets = this.physics.add.group()
     arrows = this.physics.add.group()
 
-    this.time.addEvent({ delay: 3000, callback: addCoin, callbackScope: this, loop: true });
-    this.time.addEvent({ delay: 1500, callback: addBullet, callbackScope: this, loop: true });
-    this.time.addEvent({ delay: 2000, callback: addArrow, callbackScope: this, loop: true });
+    coinsLoop = this.time.addEvent({ delay: 3000, callback: addCoin, callbackScope: this, loop: true });
+    bulletsLoop = this.time.addEvent({ delay: 1500, callback: addBullet, callbackScope: this, loop: true });
+    arrowLoop = this.time.addEvent({ delay: 5000, callback: addArrow, callbackScope: this, loop: true });
 
     //this.cameras.main.setBounds(0, 0, game.config.width, game.config.height) //Kamera porusza się tylko w obrębie świata
     this.physics.world.setBounds(0, 0, game.config.width, game.config.height - 45) //Świat gry jest większy/mniejszy niż ekran
@@ -170,7 +170,7 @@ function create() {
 
 function addCoin() {
     if (!death) {
-        coin = coins.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'coin').setScale(1.5)
+        coin = coins.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'coin').setScale(1.5)
         coin.setVelocityX(-300)
         coin.anims.play('coin', true)
     }
@@ -182,17 +182,17 @@ function addBullet() {
     choice = Math.floor(Math.random() * 4) + 1;
 
     switch (choice) {
-        //type = 'redBullet';
+        //RED BULLET
         case 1:
-            bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'redBullet');
+            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'redBullet');
             bullet.setBodySize(40, 40, false).setOffset(0, 13)
             bullet.setVelocityX(-450)
             bullet.anims.play('redBullet', true)
-            break;
+            break
 
-        //type = 'pinkBullet';
+        //PINK BULLET
         case 2:
-            bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'pinkBullet');
+            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'pinkBullet');
             bullet.setBodySize(40, 40, false).setOffset(0, 13)
             bullet.setVelocityX(-500)
             direction = Math.floor(Math.random() * 2) + 1;
@@ -205,39 +205,43 @@ function addBullet() {
             bullet.anims.play('pinkBullet', true)
             bullet.body.bounce.set(1)
             bullet.body.setCollideWorldBounds(true)
-            break;
+            break
 
-        //type = 'blueBullet';
+        //BLUE BULLET
         case 3:
-            bullet = bullets.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'blueBullet');
+            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'blueBullet');
             bullet.setBodySize(40, 40, false).setOffset(0, 13)
             bullet.setVelocityX(-550)
             bullet.anims.play('blueBullet', true)
-            break;
+            break
     }
 }
 
 function addArrow() {
     choice = Math.floor(Math.random() * 4) + 1;
+    //choice = 1
 
     switch (choice) {
+        //UP ARROW
         case 1:
-            arrow = arrows.create(1500, game.config.height - 100, 'upArrow').setScale(1.2);
-            arrow.setBodySize(40, 75, false).setOffset(32, 15)
+            arrow = arrows.create(1350, game.config.height - 100, 'upArrow').setScale(1.2);
+            arrow.setBodySize(30, 55, false).setOffset(37, 20)
             arrow.setVelocityX(-300)
             arrow.anims.play('upArrow', true)
             break;
 
+        //DOWN ARROW
         case 2:
-            arrow = arrows.create(1500, 50, 'downArrow').setScale(1.2);
-            arrow.setBodySize(40, 75, false).setOffset(32, 15)
+            arrow = arrows.create(1350, 50, 'downArrow').setScale(1.2);
+            arrow.setBodySize(30, 55, false).setOffset(32, 25)
             arrow.setVelocityX(-300)
             arrow.anims.play('downArrow', true)
             break;
 
+        //RIGHT ARROW
         case 3:
-            arrow = arrows.create(1500, Math.floor(Math.random() * (game.config.height - 100) + 50), 'rightArrow').setScale(1.2);
-            arrow.setBodySize(75, 40, false).setOffset(15, 32)
+            arrow = arrows.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'rightArrow').setScale(1.2);
+            arrow.setBodySize(55, 30, false).setOffset(25, 37)
             arrow.setVelocityX(-300)
             arrow.anims.play('rightArrow', true)
             break;
@@ -246,6 +250,9 @@ function addArrow() {
 
 death = false
 deathAnimationPlayed = false
+flyingFlag = true
+fasterGameFlag = false
+backgroundSpeed = 5
 
 //Metoda uruchamiana co klatkę
 function update() {
@@ -266,12 +273,44 @@ function update() {
     else {
         //Animacja lasu
         for (let i = 0; i < 10; i++) {
-            layers[i].tilePositionX += i * 5 * 0.12
+            layers[i].tilePositionX += i * backgroundSpeed * 0.12
         }
 
-        if (jump.isDown) player.setVelocityY(-200)
+        if (flyingFlag) {
+            if (jump.isDown) player.setVelocityY(-200)
+        }
         if (player.body.touching.down || player.body.onFloor()) player.anims.play('runningPlayer', true)
         else player.anims.play('flyingPlayer', true)
+
+        if (fasterGameFlag) {
+            arrows.children.iterate((arrow) => {
+                if (arrow != undefined) arrow.setVelocityX(-600)
+            })
+            coins.children.iterate((coin) => {
+                if (coin != undefined) coin.setVelocityX(-600)
+            })
+            bullets.children.iterate((bullet) => {
+                if (bullet != undefined) {
+                    switch (bullet.texture.key) {
+                        case "redBullet":
+                            bullet.setVelocityX(-900)
+                            break
+
+                        case "pinkBullet":
+                            bullet.setVelocityX(-1000)
+                            break
+
+                        case "blueBullet":
+                            bullet.setVelocityX(-1100)
+                            break
+                    }
+                }
+            })
+
+            coinsLoop.delay = 1500
+            bulletsLoop.delay = 750
+            arrowLoop.delay = 2500
+        }
 
         coins.children.iterate((coin) => {
             if (coin != undefined) {
@@ -284,6 +323,9 @@ function update() {
                 if (arrow.x < -100) arrows.remove(arrow, true, true)
             }
         })
+
+        this.physics.collide(player, coins, collectCoin)
+        this.physics.collide(player, arrows, collectArrow)
     }
 
     bullets.children.iterate((bullet) => {
@@ -299,11 +341,10 @@ function update() {
 
     //Wywołanie funkcji przy kolizji
     this.physics.collide(player, bullets, playerDeath)
-    this.physics.collide(player, coins, collectCoin)
-    this.physics.collide(player, arrows, collectArrow)
 }
 
 function playerDeath(player, bullets) {
+    player.setBodySize(140, 70, false).setOffset(0, 80)
     death = true
     player.body.gravity.y = 90000
     bullets.destroy()
@@ -316,13 +357,34 @@ function collectCoin(player, coins) {
 
 function collectArrow(player, arrows) {
     if (arrows.texture.key == "upArrow") {
-        player.setVelocityY(-1500)
-    }
-    if (arrows.texture.key == "rightArrow") {
+        player.setVelocityY(-3000)
+        flyingFlag = false
 
+        setTimeout(() => {
+            flyingFlag = true
+        }, 250)
     }
-    if (arrows.texture.key == "downArrow") {
+    else if (arrows.texture.key == "rightArrow") {
+        backgroundSpeed = 10
+        fasterGameFlag = true
+
+        setTimeout(() => {
+            backgroundSpeed = 5
+            fasterGameFlag = false
+
+            coinsLoop.delay = 3000
+            bulletsLoop.delay = 1500
+            arrowLoop.delay = 5000
+        }, 3000)
+    }
+    else if (arrows.texture.key == "downArrow") {
         player.setVelocityY(2500)
+        flyingFlag = false
+
+        setTimeout(() => {
+            flyingFlag = true
+            console.log(flyingFlag)
+        }, 250)
     }
     arrows.destroy()
 }
