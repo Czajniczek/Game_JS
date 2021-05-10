@@ -16,6 +16,13 @@ let game = new Phaser.Game({
     }
 })
 
+death = false
+deathAnimationPlayed = false
+flyingFlag = true
+fasterGameFlag = false
+backgroundSpeed = 5
+restart = false
+
 //Ładowanie zasobów
 function preload() {
     this.load.image('background', 'img/Background.png')
@@ -25,6 +32,10 @@ function preload() {
     }
 
     this.load.bitmapFont('Desyrel', 'fonts/desyrel.png', 'fonts/desyrel.xml')
+
+    this.load.spritesheet('playButton', 'img/ButtonPlay.png', {
+        frameWidth: 533, frameHeight: 178
+    })
 
     this.load.spritesheet('runningPlayer', 'img/PlayerRunning.png', {
         frameWidth: 173, frameHeight: 149.6666
@@ -78,6 +89,24 @@ function create() {
     for (let i = 0; i < 10; i++) {
         layers[i] = this.add.tileSprite(0, 0, game.config.width, game.config.height, 'layer' + i).setOrigin(0)
     }
+
+    playButton = this.add.sprite(game.config.width / 2, game.config.height / 2, 'playButton', 0).setInteractive().setScale(0.8).setDepth(1)
+    playButton.visible = false
+    playButton.on('pointerover', function () {
+        this.setFrame(1)
+    })
+
+    playButton.on('pointerout', function () {
+        this.setFrame(2)
+    })
+
+    playButton.on('pointerdown', function () {
+        restart = true
+    })
+
+    //playButton = this.add.button(game.config.width / 2, game.config.height / 2, 'playButton', playButtonClick, this, 1, 2)
+    gameOverText = this.add.bitmapText(game.config.width / 2, (game.config.height / 2) - 140, 'Desyrel', 'GAME OVER', 100).setOrigin().setDepth(1)
+    gameOverText.visible = false
 
     this.anims.create({
         key: 'runningPlayer',
@@ -152,9 +181,9 @@ function create() {
     bullets = this.physics.add.group()
     arrows = this.physics.add.group()
 
-    coinsLoop = this.time.addEvent({ delay: 3000, callback: addCoin, callbackScope: this, loop: true });
-    bulletsLoop = this.time.addEvent({ delay: 1500, callback: addBullet, callbackScope: this, loop: true });
-    arrowLoop = this.time.addEvent({ delay: 5000, callback: addArrow, callbackScope: this, loop: true });
+    coinsLoop = this.time.addEvent({ delay: 3000, callback: addCoin, callbackScope: this, loop: true })
+    bulletsLoop = this.time.addEvent({ delay: 1500, callback: addBullet, callbackScope: this, loop: true })
+    arrowLoop = this.time.addEvent({ delay: 5000, callback: addArrow, callbackScope: this, loop: true })
 
     //this.cameras.main.setBounds(0, 0, game.config.width, game.config.height) //Kamera porusza się tylko w obrębie świata
     this.physics.world.setBounds(0, 0, game.config.width, game.config.height - 45) //Świat gry jest większy/mniejszy niż ekran
@@ -248,12 +277,6 @@ function addArrow() {
     }
 }
 
-death = false
-deathAnimationPlayed = false
-flyingFlag = true
-fasterGameFlag = false
-backgroundSpeed = 5
-
 //Metoda uruchamiana co klatkę
 function update() {
     if (death) {
@@ -341,6 +364,15 @@ function update() {
 
     //Wywołanie funkcji przy kolizji
     this.physics.collide(player, bullets, playerDeath)
+
+    if (restart) {
+        this.registry.destroy() //Destroy registry
+        this.events.off() //Disable all active events
+        this.scene.restart() //Restart current scene
+        restart = false
+        death = false
+        deathAnimationPlayed = false
+    }
 }
 
 function playerDeath(player, bullets) {
@@ -348,6 +380,8 @@ function playerDeath(player, bullets) {
     death = true
     player.body.gravity.y = 90000
     bullets.destroy()
+    gameOverText.visible = true
+    playButton.visible = true
 }
 
 function collectCoin(player, coins) {
