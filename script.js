@@ -11,7 +11,7 @@ let game = new Phaser.Game({
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     }
 })
@@ -138,9 +138,9 @@ function create() {
     bullets = this.physics.add.group()
     arrows = this.physics.add.group()
 
-    coinsLoop = this.time.addEvent({ delay: 3000, callback: addCoin, callbackScope: this, loop: true })
+    coinsLoop = this.time.addEvent({ delay: 3100, callback: addCoin, callbackScope: this, loop: true })
     bulletsLoop = this.time.addEvent({ delay: 1500, callback: addBullet, callbackScope: this, loop: true })
-    arrowLoop = this.time.addEvent({ delay: 6000, callback: addArrow, callbackScope: this, loop: true })
+    arrowLoop = this.time.addEvent({ delay: 5900, callback: addArrow, callbackScope: this, loop: true })
 }
 
 function addCoin() {
@@ -265,9 +265,9 @@ function update() {
                 }
             })
 
-            coinsLoop.delay = 1500
+            coinsLoop.delay = 1550
             bulletsLoop.delay = 750
-            arrowLoop.delay = 3000
+            arrowLoop.delay = 2950
         }
 
         coins.children.iterate((coin) => {
@@ -330,9 +330,9 @@ function collectArrow(player, arrows) {
             backgroundSpeed = 5
             fasterGameFlag = false
 
-            coinsLoop.delay = 3000
+            coinsLoop.delay = 3100
             bulletsLoop.delay = 1500
-            arrowLoop.delay = 6000
+            arrowLoop.delay = 5900
         }, 3000)
     }
     else if (arrows.texture.key == "downArrow") {
