@@ -16,95 +16,51 @@ let game = new Phaser.Game({
     }
 })
 
-death = false
-deathAnimationPlayed = false
-flyingFlag = true
-fasterGameFlag = false
-backgroundSpeed = 5
-restart = false
+let layers = []
+let backgroundSpeed = 5
+let flyingFlag = true
+let fasterGameFlag = false
+let death = false
+let deathAnimationPlayed = false
+let restart = false
 
 //Ładowanie zasobów
 function preload() {
     this.load.image('background', 'img/Background.png')
-
-    for (i = 0; i < 10; i++) {
-        this.load.image('layer' + i, 'img/BackgroundLayer' + i + '.png')
-    }
-
+    for (i = 0; i < 10; i++) this.load.image('layer' + i, 'img/BackgroundLayer' + i + '.png')
     this.load.bitmapFont('Desyrel', 'fonts/desyrel.png', 'fonts/desyrel.xml')
-
-    this.load.spritesheet('playButton', 'img/ButtonPlay.png', {
-        frameWidth: 533, frameHeight: 178
-    })
-
-    this.load.spritesheet('runningPlayer', 'img/PlayerRunning.png', {
-        frameWidth: 173, frameHeight: 149.6666
-    })
-
-    this.load.spritesheet('flyingPlayer', 'img/PlayerFlying.png', {
-        frameWidth: 173, frameHeight: 149.6666
-    })
-
-    this.load.spritesheet('deathPlayer', 'img/PlayerDeath.png', {
-        frameWidth: 173, frameHeight: 150
-    })
-
-    this.load.spritesheet('redBullet', 'img/BulletRed.png', {
-        frameWidth: 128, frameHeight: 49.5
-    })
-
-    this.load.spritesheet('blueBullet', 'img/BulletBlue.png', {
-        frameWidth: 128, frameHeight: 49.5
-    })
-
-    this.load.spritesheet('pinkBullet', 'img/BulletPink.png', {
-        frameWidth: 128, frameHeight: 49.5
-    })
-
-    this.load.spritesheet('coin', 'img/Coin.png', {
-        frameWidth: 32, frameHeight: 32
-    })
-
-    this.load.spritesheet('upArrow', 'img/ArrowUp.png', {
-        frameWidth: 100, frameHeight: 100
-    })
-
-    this.load.spritesheet('downArrow', 'img/ArrowDown.png', {
-        frameWidth: 100, frameHeight: 100
-    })
-
-    this.load.spritesheet('rightArrow', 'img/ArrowRight.png', {
-        frameWidth: 100, frameHeight: 100
-    })
+    this.load.spritesheet('playButton', 'img/ButtonPlay.png', { frameWidth: 533, frameHeight: 178 })
+    this.load.spritesheet('runningPlayer', 'img/PlayerRunning.png', { frameWidth: 173, frameHeight: 149.6666 })
+    this.load.spritesheet('flyingPlayer', 'img/PlayerFlying.png', { frameWidth: 173, frameHeight: 149.6666 })
+    this.load.spritesheet('deathPlayer', 'img/PlayerDeath.png', { frameWidth: 173, frameHeight: 150 })
+    this.load.spritesheet('redBullet', 'img/BulletRed.png', { frameWidth: 128, frameHeight: 49.5 })
+    this.load.spritesheet('blueBullet', 'img/BulletBlue.png', { frameWidth: 128, frameHeight: 49.5 })
+    this.load.spritesheet('pinkBullet', 'img/BulletPink.png', { frameWidth: 128, frameHeight: 49.5 })
+    this.load.spritesheet('coin', 'img/Coin.png', { frameWidth: 32, frameHeight: 32 })
+    this.load.spritesheet('upArrow', 'img/ArrowUp.png', { frameWidth: 100, frameHeight: 100 })
+    this.load.spritesheet('downArrow', 'img/ArrowDown.png', { frameWidth: 100, frameHeight: 100 })
+    this.load.spritesheet('rightArrow', 'img/ArrowRight.png', { frameWidth: 100, frameHeight: 100 })
 }
 
 //Tworzenie obiektów gry
 function create() {
-    //https://photonstorm.github.io/phaser3-docs/Phaser.GameObjects.Components.Origin.html
+    this.physics.world.setBounds(0, 0, game.config.width, game.config.height - 45) //Świat gry jest większy/mniejszy niż ekran
+    this.physics.world.setBoundsCollision(false, false, true, true) //Lewo Prawo Góra Dół
+
     background = this.add.tileSprite(0, 0, game.config.width, game.config.height, 'background').setOrigin(0)
     score = this.add.bitmapText(50, 10, 'Desyrel', '0', 35)
+    jump = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
 
-    //this.scene.pause()
-    layers = []
     for (let i = 0; i < 10; i++) {
         layers[i] = this.add.tileSprite(0, 0, game.config.width, game.config.height, 'layer' + i).setOrigin(0)
     }
 
     playButton = this.add.sprite(game.config.width / 2, game.config.height / 2, 'playButton', 0).setInteractive().setScale(0.8).setDepth(1)
     playButton.visible = false
-    playButton.on('pointerover', function () {
-        this.setFrame(1)
-    })
+    playButton.on('pointerover', function () { this.setFrame(1) })
+    playButton.on('pointerout', function () { this.setFrame(0) })
+    playButton.on('pointerdown', function () { restart = true })
 
-    playButton.on('pointerout', function () {
-        this.setFrame(2)
-    })
-
-    playButton.on('pointerdown', function () {
-        restart = true
-    })
-
-    //playButton = this.add.button(game.config.width / 2, game.config.height / 2, 'playButton', playButtonClick, this, 1, 2)
     gameOverText = this.add.bitmapText(game.config.width / 2, (game.config.height / 2) - 140, 'Desyrel', 'GAME OVER', 100).setOrigin().setDepth(1)
     gameOverText.visible = false
 
@@ -168,11 +124,12 @@ function create() {
         frameRate: 15, repeat: -1
     })
 
-    jump = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
     player = this.physics.add.sprite(150, (game.config.height / 2) - 50, 'flyingPlayer')
     player.body.gravity.y = 500
     player.setBodySize(80, 140, false).setOffset(65, 0)
     player.anims.play('flyingPlayer', true)
+    player.body.setCollideWorldBounds(true) //Kolizja z krawędziami świata
+    player.body.immovable = true //Inne ciała nie mogą go przesuwać
 
     scoreCoin = this.add.sprite(30, 35, 'coin').setScale(1.5)
     scoreCoin.anims.play('coin', true)
@@ -183,37 +140,25 @@ function create() {
 
     coinsLoop = this.time.addEvent({ delay: 3000, callback: addCoin, callbackScope: this, loop: true })
     bulletsLoop = this.time.addEvent({ delay: 1500, callback: addBullet, callbackScope: this, loop: true })
-    arrowLoop = this.time.addEvent({ delay: 5000, callback: addArrow, callbackScope: this, loop: true })
-
-    //this.cameras.main.setBounds(0, 0, game.config.width, game.config.height) //Kamera porusza się tylko w obrębie świata
-    this.physics.world.setBounds(0, 0, game.config.width, game.config.height - 45) //Świat gry jest większy/mniejszy niż ekran
-    this.physics.world.setBoundsCollision(false, false, true, true) //Prawo, lewo, góra, dół
-    //this.cameras.main.startFollow(player) //Kamera podąża za graczem
-
-    //Kolizja z krawędziami świata
-    player.body.setCollideWorldBounds(true)
-
-    //Inne ciała nie mogą go przesuwać
-    player.body.immovable = true
+    arrowLoop = this.time.addEvent({ delay: 6000, callback: addArrow, callbackScope: this, loop: true })
 }
 
 function addCoin() {
     if (!death) {
-        coin = coins.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'coin').setScale(1.5)
+        let coin = coins.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'coin').setScale(1.5)
         coin.setVelocityX(-300)
         coin.anims.play('coin', true)
     }
 }
 
 function addBullet() {
-    //https://developer.mozilla.org/pl/docs/Web/JavaScript/Reference/Global_Objects/Math/random
-    //https://www.w3schools.com/js/js_random.asp
-    choice = Math.floor(Math.random() * 4) + 1;
+    let choice = Math.floor(Math.random() * 4) + 1
+    let bullet
 
     switch (choice) {
         //RED BULLET
         case 1:
-            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'redBullet');
+            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'redBullet')
             bullet.setBodySize(40, 40, false).setOffset(0, 13)
             bullet.setVelocityX(-450)
             bullet.anims.play('redBullet', true)
@@ -221,16 +166,14 @@ function addBullet() {
 
         //PINK BULLET
         case 2:
-            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'pinkBullet');
+            let direction = Math.floor(Math.random() * 2) + 1
+            let value = Math.floor(Math.random() * 400) + 100
+            if (direction != 1) value = -value
+
+            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'pinkBullet')
             bullet.setBodySize(40, 40, false).setOffset(0, 13)
             bullet.setVelocityX(-500)
-            direction = Math.floor(Math.random() * 2) + 1;
-            value = Math.floor(Math.random() * 400) + 100;
-
-            if (direction != 1) value = value * (-1)
-
             bullet.setVelocityY(value)
-
             bullet.anims.play('pinkBullet', true)
             bullet.body.bounce.set(1)
             bullet.body.setCollideWorldBounds(true)
@@ -238,7 +181,7 @@ function addBullet() {
 
         //BLUE BULLET
         case 3:
-            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'blueBullet');
+            bullet = bullets.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'blueBullet')
             bullet.setBodySize(40, 40, false).setOffset(0, 13)
             bullet.setVelocityX(-550)
             bullet.anims.play('blueBullet', true)
@@ -247,13 +190,13 @@ function addBullet() {
 }
 
 function addArrow() {
-    choice = Math.floor(Math.random() * 4) + 1;
-    //choice = 1
+    let choice = Math.floor(Math.random() * 4) + 1
+    let arrow
 
     switch (choice) {
         //UP ARROW
         case 1:
-            arrow = arrows.create(1350, game.config.height - 100, 'upArrow').setScale(1.2);
+            arrow = arrows.create(1350, game.config.height - 100, 'upArrow').setScale(1.2)
             arrow.setBodySize(30, 55, false).setOffset(37, 20)
             arrow.setVelocityX(-300)
             arrow.anims.play('upArrow', true)
@@ -261,7 +204,7 @@ function addArrow() {
 
         //DOWN ARROW
         case 2:
-            arrow = arrows.create(1350, 50, 'downArrow').setScale(1.2);
+            arrow = arrows.create(1350, 50, 'downArrow').setScale(1.2)
             arrow.setBodySize(30, 55, false).setOffset(32, 25)
             arrow.setVelocityX(-300)
             arrow.anims.play('downArrow', true)
@@ -269,7 +212,7 @@ function addArrow() {
 
         //RIGHT ARROW
         case 3:
-            arrow = arrows.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'rightArrow').setScale(1.2);
+            arrow = arrows.create(1350, Math.floor(Math.random() * (game.config.height - 100) + 50), 'rightArrow').setScale(1.2)
             arrow.setBodySize(55, 30, false).setOffset(25, 37)
             arrow.setVelocityX(-300)
             arrow.anims.play('rightArrow', true)
@@ -285,33 +228,25 @@ function update() {
             deathAnimationPlayed = true
         }
 
-        for (let i = 0; i < 10; i++) {
-            layers[i].tilePositionX += 0
-        }
+        for (let i = 0; i < 10; i++) layers[i].tilePositionX += 0
 
         if (coins.active == true) coins.setVelocityX(0)
         if (arrows.active == true) arrows.setVelocityX(0)
         //if (bullets.active == true) bullets.setVelocityX(0)
     }
     else {
-        //Animacja lasu
-        for (let i = 0; i < 10; i++) {
-            layers[i].tilePositionX += i * backgroundSpeed * 0.12
-        }
+        for (let i = 0; i < 10; i++) layers[i].tilePositionX += i * backgroundSpeed * 0.12 //Animacja lasu
 
-        if (flyingFlag) {
-            if (jump.isDown) player.setVelocityY(-200)
-        }
+        if (flyingFlag && jump.isDown) player.setVelocityY(-200)
+
         if (player.body.touching.down || player.body.onFloor()) player.anims.play('runningPlayer', true)
         else player.anims.play('flyingPlayer', true)
 
         if (fasterGameFlag) {
-            arrows.children.iterate((arrow) => {
-                if (arrow != undefined) arrow.setVelocityX(-600)
-            })
-            coins.children.iterate((coin) => {
-                if (coin != undefined) coin.setVelocityX(-600)
-            })
+            arrows.children.iterate((arrow) => { if (arrow != undefined) arrow.setVelocityX(-600) })
+
+            coins.children.iterate((coin) => { if (coin != undefined) coin.setVelocityX(-600) })
+
             bullets.children.iterate((bullet) => {
                 if (bullet != undefined) {
                     switch (bullet.texture.key) {
@@ -332,7 +267,7 @@ function update() {
 
             coinsLoop.delay = 1500
             bulletsLoop.delay = 750
-            arrowLoop.delay = 2500
+            arrowLoop.delay = 3000
         }
 
         coins.children.iterate((coin) => {
@@ -362,26 +297,17 @@ function update() {
         }
     })
 
-    //Wywołanie funkcji przy kolizji
     this.physics.collide(player, bullets, playerDeath)
 
     if (restart) {
         this.registry.destroy() //Destroy registry
         this.events.off() //Disable all active events
         this.scene.restart() //Restart current scene
-        restart = false
+
         death = false
         deathAnimationPlayed = false
+        restart = false
     }
-}
-
-function playerDeath(player, bullets) {
-    player.setBodySize(140, 70, false).setOffset(0, 80)
-    death = true
-    player.body.gravity.y = 90000
-    bullets.destroy()
-    gameOverText.visible = true
-    playButton.visible = true
 }
 
 function collectCoin(player, coins) {
@@ -394,9 +320,7 @@ function collectArrow(player, arrows) {
         player.setVelocityY(-3000)
         flyingFlag = false
 
-        setTimeout(() => {
-            flyingFlag = true
-        }, 250)
+        setTimeout(() => { flyingFlag = true }, 250)
     }
     else if (arrows.texture.key == "rightArrow") {
         backgroundSpeed = 10
@@ -408,17 +332,25 @@ function collectArrow(player, arrows) {
 
             coinsLoop.delay = 3000
             bulletsLoop.delay = 1500
-            arrowLoop.delay = 5000
+            arrowLoop.delay = 6000
         }, 3000)
     }
     else if (arrows.texture.key == "downArrow") {
         player.setVelocityY(2500)
         flyingFlag = false
 
-        setTimeout(() => {
-            flyingFlag = true
-            console.log(flyingFlag)
-        }, 250)
+        setTimeout(() => { flyingFlag = true }, 250)
     }
+
     arrows.destroy()
+}
+
+function playerDeath(player, bullets) {
+    player.body.gravity.y = 90000
+    player.setBodySize(140, 70, false).setOffset(0, 80)
+    bullets.destroy()
+    death = true
+
+    gameOverText.visible = true
+    playButton.visible = true
 }
